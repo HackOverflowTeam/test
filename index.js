@@ -110,8 +110,7 @@ app.post('/verify-otp', (req, res) => {
   }
 });
 
-// New route: /sendmail
-// POST /sendmail route
+
 app.post('/sendmail', async (req, res) => {
   const { to, subject, body } = req.body;
   const referer = req.headers.referer;
