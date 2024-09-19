@@ -3,7 +3,6 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
 const dotenv = require('dotenv');
-const crypto = require('crypto');
 
 // Load environment variables from .env file
 dotenv.config();
@@ -67,7 +66,7 @@ app.post('/send-otp', async (req, res) => {
     }
 
     // Generate 6-digit OTP
-    const otp = Math.floor(1000 + Math.random() * 9000);
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
     // Store OTP in session (in production, use a database with expiration)
     userSessions[email] = otp;
@@ -108,6 +107,25 @@ app.post('/verify-otp', (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ error: `An unexpected error occurred: ${error}` });
+  }
+});
+
+// New route: /sendmail
+app.post('/sendmail', async (req, res) => {
+  const { to, subject, body } = req.body;
+
+  // Validate required fields
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: "Missing required fields: 'to', 'subject', and 'body'" });
+  }
+
+  const referer = req.headers.referer;
+
+  // Send the email
+  if (await sendEmail(to, subject, body, referer)) {
+    return res.status(200).json({ message: 'Email sent successfully' });
+  } else {
+    return res.status(500).json({ error: 'Failed to send email. Please try again later.' });
   }
 });
 
