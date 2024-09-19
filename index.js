@@ -66,7 +66,7 @@ app.post('/send-otp', async (req, res) => {
     }
 
     // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    const otp = Math.floor(1000 + Math.random() * 9000);
 
     // Store OTP in session (in production, use a database with expiration)
     userSessions[email] = otp;
@@ -111,23 +111,29 @@ app.post('/verify-otp', (req, res) => {
 });
 
 // New route: /sendmail
+// POST /sendmail route
 app.post('/sendmail', async (req, res) => {
   const { to, subject, body } = req.body;
-
-  // Validate required fields
-  if (!to || !subject || !body) {
-    return res.status(400).json({ error: "Missing required fields: 'to', 'subject', and 'body'" });
-  }
-
   const referer = req.headers.referer;
 
-  // Send the email
-  if (await sendEmail(to, subject, body, referer)) {
-    return res.status(200).json({ message: 'Email sent successfully' });
-  } else {
-    return res.status(500).json({ error: 'Failed to send email. Please try again later.' });
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: "Missing parameters" });
+  }
+
+  try {
+    const emailSent = await sendEmail(to, subject, body, referer);
+
+    if (emailSent) {
+      res.status(200).json({ message: "Email sent successfully" });
+    } else {
+      res.status(500).json({ error: "Failed to send email. Please try again later." });
+    }
+  } catch (error) {
+    console.error(`Error in /sendmail: ${error}`);
+    res.status(500).json({ error: `Internal server error: ${error.message}` });
   }
 });
+
 
 // Error handling middleware for unexpected errors
 app.use((err, req, res, next) => {
